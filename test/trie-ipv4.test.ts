@@ -1,4 +1,4 @@
-import { ipv4AddressToBits, checkOverlaps } from '../src/trie-ipv4';
+import { ipv4AddressToBits, checkOverlaps, IPv4Trie } from '../src/trie-ipv4';
 
 
 describe('IPv4Trie Class detect overlaps', () => {
@@ -59,3 +59,53 @@ describe('IPv4 Address tp Bits Conversion', () => {
         expect(bits).toEqual(expectedBits);
     });
 });
+
+describe('IPv4Trie Class search prefixes', () => {
+    let trie: IPv4Trie;
+    beforeEach(() => {
+        trie = new IPv4Trie();
+      });
+
+  it('should find an existing prefix', () => {
+    const ranges = [
+      { address: '192.168.0.0', prefixLength: 24 },
+      { address: '10.0.0.0', prefixLength: 16 },
+      { address: '172.16.0.0', prefixLength: 12 }
+    ];
+
+    for (const { address, prefixLength } of ranges) {
+      trie.insert(ipv4AddressToBits(address), prefixLength);
+    }
+
+    expect(trie.search(ipv4AddressToBits('192.168.0.0'), 24)).toBe(true);
+    expect(trie.search(ipv4AddressToBits('10.0.0.0'), 16)).toBe(true);
+    expect(trie.search(ipv4AddressToBits('172.16.0.0'), 12)).toBe(true);
+  });
+
+  it('should not find a non-existing prefix', () => {
+    const ranges = [
+      { address: '192.168.0.0', prefixLength: 24 },
+      { address: '10.0.0.0', prefixLength: 16 },
+      { address: '172.16.0.0', prefixLength: 16 }
+    ];
+
+    for (const { address, prefixLength } of ranges) {
+      trie.insert(ipv4AddressToBits(address), prefixLength);
+    }
+
+    expect(trie.search(ipv4AddressToBits('192.169.1.0'), 24)).toBe(false);
+    expect(trie.search(ipv4AddressToBits('10.1.0.0'), 16)).toBe(false);
+    expect(trie.search(ipv4AddressToBits('172.17.0.0'), 16)).toBe(false);
+  });
+
+  it('should return false for a partially matching prefix', () => {
+    trie.insert(ipv4AddressToBits('192.168.0.0'), 24);
+
+    expect(trie.search(ipv4AddressToBits('192.168.0.1'), 32)).toBe(false);
+  });
+
+  it('should return false when trie is empty', () => {
+    expect(trie.search(ipv4AddressToBits('192.168.0.0'), 24)).toBe(false);
+  });
+});
+  

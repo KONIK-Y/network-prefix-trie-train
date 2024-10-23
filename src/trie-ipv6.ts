@@ -38,8 +38,18 @@ export class IPv6Trie {
         if (node.children.size > 0) {
             throw new RangeError(`The specified prefix contains an existing prefix.`);
         }
-    
         node.isEnd = true;        
+    }
+    search(prefixBits: number[], prefixLength: number): boolean {
+        let node = this.root;
+        for (let i = 0; i < prefixLength; i++) {
+            const bit = prefixBits[i];        
+            if (!node.children.has(bit)) {
+                return false;
+            }
+            node = node.children.get(bit)!;
+        }
+        return node.isEnd;
     }
 }
 

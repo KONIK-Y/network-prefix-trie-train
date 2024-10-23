@@ -1,4 +1,4 @@
-import { ipv6AddressToBits, checkOverlaps, expandIPv6Address } from '../src/trie-ipv6';
+import { ipv6AddressToBits, checkOverlaps, expandIPv6Address, IPv6Trie } from '../src/trie-ipv6';
 
 
 describe('IPv6Trie Class detect overlaps', () => {
@@ -100,11 +100,12 @@ describe('Expand IPv6 Address', () => {
   
       expect(expanded).toBe(expected);
     });
-  
-    it('should return the same address if already expanded', () => {
-      const expanded = '2001:0db8:0000:0000:0000:0000:0000:0001';
-      const result = expandIPv6Address(expanded);
-  
+
+    it('should correctly expand IPv6 address with omitted zeros', () => {
+      const compressed = '2001:db8::';
+      const expanded = '2001:0db8:0000:0000:0000:0000:0000:0000';
+      const result = expandIPv6Address(compressed);
+      
       expect(result).toBe(expanded);
     });
 
@@ -116,3 +117,72 @@ describe('Expand IPv6 Address', () => {
         expect(expanded).toBe(expected);
       });  
   });
+
+describe('IPv6Trie Class search prefixes', () => {
+  let trie: IPv6Trie;
+
+  beforeEach(() => {
+    trie = new IPv6Trie();
+  });
+
+  it('should find an existing prefix', () => {
+    const ranges = [
+      { address: '2001:db8::', prefixLength: 64 },
+      { address: '2001:db9::', prefixLength: 64 },
+      { address: '2001:dba::', prefixLength: 64 },
+    ];
+
+    for (const { address, prefixLength } of ranges) {
+      trie.insert(ipv6AddressToBits(address), prefixLength);
+    }
+
+    expect(trie.search(ipv6AddressToBits('2001:db8::'), 64)).toBe(true);
+    expect(trie.search(ipv6AddressToBits('2001:db9::'), 64)).toBe(true);
+    expect(trie.search(ipv6AddressToBits('2001:dba::'), 64)).toBe(true);
+  });
+
+  it('should not find a non-existing prefix', () => {
+    const ranges = [
+      { address: '2001:db8::', prefixLength: 64 },
+      { address: '2001:db9::', prefixLength: 64 },
+      { address: '2001:dba::', prefixLength: 64 },
+    ];
+
+    for (const { address, prefixLength } of ranges) {
+      trie.insert(ipv6AddressToBits(address), prefixLength);
+    }
+
+    expect(trie.search(ipv6AddressToBits('2001:db1::'), 64)).toBe(false);
+    expect(trie.search(ipv6AddressToBits('2001:dbc::'), 64)).toBe(false);
+    expect(trie.search(ipv6AddressToBits('2001:db7::'), 64)).toBe(false);
+  });
+
+  it('should return false for a partially matching prefix', () => {
+    trie.insert(ipv6AddressToBits('2001:db8::'), 64);
+
+    expect(trie.search(ipv6AddressToBits('2001:db8:1::'), 64)).toBe(false);
+    expect(trie.search(ipv6AddressToBits('2001:db8::1'), 128)).toBe(false);
+  });
+
+  it('should return false when trie is empty', () => {
+    expect(trie.search(ipv6AddressToBits('2001:db8::'), 64)).toBe(false);
+    expect(trie.search(ipv6AddressToBits('::1'), 128)).toBe(false);
+  });
+
+  it('should handle prefixes with different lengths correctly', () => {
+    const ranges = [
+      { address: '2001:db8::', prefixLength: 48 },
+      { address: '2001:db8:1::', prefixLength: 64 },
+      { address: '2001:db8:2::', prefixLength: 96 }
+    ];
+
+    for (const { address, prefixLength } of ranges) {
+      trie.insert(ipv6AddressToBits(address), prefixLength);
+    }
+
+    expect(trie.search(ipv6AddressToBits('2001:db8::'), 48)).toBe(true);
+    expect(trie.search(ipv6AddressToBits('2001:db8:1::'), 64)).toBe(true);
+    expect(trie.search(ipv6AddressToBits('2001:db8:2::'), 96)).toBe(true);
+    expect(trie.search(ipv6AddressToBits('2001:db8:3::'), 96)).toBe(false);
+  });
+});
