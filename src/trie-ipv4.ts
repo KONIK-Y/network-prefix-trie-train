@@ -1,3 +1,5 @@
+import { PrefixInfo } from "./types/types";
+
 export class TrieNode {
     children: Map<number, TrieNode>;
     isEnd: boolean;
@@ -6,12 +8,6 @@ export class TrieNode {
         this.children = new Map();
         this.isEnd = false;
     }
-}
-export interface PrefixInfo {
-    address: string;
-    prefixLength: number;
-    overlap: boolean;
-    errorMessage?: string;  
 }
 
 export class IPv4Trie {
@@ -34,15 +30,15 @@ export class IPv4Trie {
         
             if (node.isEnd) {
                 if (i === prefixLength - 1) {
-                    throw new Error(`重複エラー: 同じプレフィックスが既に存在します。`);
+                    throw new RangeError(`The same prefix already exists.`);
                 } else {
-                    throw new Error(`重複エラー: 指定されたプレフィックスは既存のプレフィックスに含まれています。`);
+                    throw new RangeError(`The specified prefix is included in an existing prefix.`);
                 }
             }
         }
         
         if (node.children.size > 0) {
-            throw new Error(`重複エラー: 指定されたプレフィックスは既存のプレフィックスを包含しています。`);
+            throw new RangeError(`The specified prefix contains an existing prefix.`);
         }
     
         node.isEnd = true;        
@@ -77,7 +73,10 @@ export function checkOverlaps(ranges: { address: string; prefixLength: number }[
             trie.insert(bits, range.prefixLength);
         } catch (error: any) {
             prefixInfo.overlap = true;
-            prefixInfo.errorMessage = error.message;
+            prefixInfo.errorMessage = {
+                type: error.constructor.name,
+                message: error.message,
+            }
         }
 
         prefixInfos.push(prefixInfo);

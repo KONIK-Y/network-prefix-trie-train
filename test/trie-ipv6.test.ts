@@ -1,4 +1,4 @@
-import { IPv6Trie, ipv6AddressToBits, checkOverlaps, expandIPv6Address } from '../src/utils/trie-ipv6';
+import { ipv6AddressToBits, checkOverlaps, expandIPv6Address } from '../src/trie-ipv6';
 
 
 describe('IPv6Trie Class detect overlaps', () => {
@@ -20,9 +20,9 @@ describe('IPv6Trie Class detect overlaps', () => {
     it('should detect overlaps and throw errors', () => {
         const ranges = [
             { address: '2001:db8::', prefixLength: 32 },
-            { address: '2001:db8::', prefixLength: 32 }, // 同じプレフィックス
-            { address: '2001:db8:1::', prefixLength: 48 }, // 既存のプレフィックスに含まれる
-            { address: '2001:db8::', prefixLength: 16 }, // 既存のプレフィックスを包含する
+            { address: '2001:db8::', prefixLength: 32 },
+            { address: '2001:db8:1::', prefixLength: 48 },
+            { address: '2001:db8::', prefixLength: 16 },
         ];
 
         const prefixInfos = checkOverlaps(ranges);
@@ -31,13 +31,13 @@ describe('IPv6Trie Class detect overlaps', () => {
         expect(prefixInfos[0].errorMessage).toBeUndefined();
 
         expect(prefixInfos[1].overlap).toBe(true);
-        expect(prefixInfos[1].errorMessage).toBe('重複エラー: 同じプレフィックスが既に存在します。');
+        expect(prefixInfos[1].errorMessage).toStrictEqual({type:'RangeError',message:'The same prefix already exists.'});
 
         expect(prefixInfos[2].overlap).toBe(true);
-        expect(prefixInfos[2].errorMessage).toBe('重複エラー: 指定されたプレフィックスは既存のプレフィックスに含まれています。');
+        expect(prefixInfos[2].errorMessage).toStrictEqual({type:'RangeError',message:'The specified prefix is included in an existing prefix.'});
 
         expect(prefixInfos[3].overlap).toBe(true);
-        expect(prefixInfos[3].errorMessage).toBe('重複エラー: 指定されたプレフィックスは既存のプレフィックスを包含しています。');
+        expect(prefixInfos[3].errorMessage).toStrictEqual({type:'RangeError',message:'The specified prefix contains an existing prefix.'});
     });
 });
 
@@ -81,19 +81,19 @@ describe('IPv6 Address to Bits Conversion', () => {
     expect(bits.length).toBe(128);
 
     const expectedBits = [
-        1,1,1,1,1,1,1,0,1,0,0,0,0,0,0,0,
+        1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0,
         ...Array(16 * 3).fill(0),
-        0,0,0,0,0,0,0,1,1,1,1,1,1,1,1,1,
-        1,1,1,1,1,1,1,0,0,0,1,0,0,0,1,1,
-        0,1,0,0,0,1,0,1,0,1,1,0,0,1,1,1,
-        1,0,0,0,1,0,0,1,0,0,0,0,1,0,1,0
+        0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1, 1,
+        0, 1, 0, 0, 0, 1, 0, 1, 0, 1, 1, 0, 0, 1, 1, 1,
+        1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0
     ];
     expect(bits).toEqual(expectedBits);
     });
 });
 
 describe('Expand IPv6 Address', () => {
-    it('should correctly expand compressed IPv6 address', () => {
+    it('should correctly expand compressed and omitting zeros IPv6 address', () => {
       const compressed = '2001:db8::1';
       const expanded = expandIPv6Address(compressed);
       const expected = '2001:0db8:0000:0000:0000:0000:0000:0001';

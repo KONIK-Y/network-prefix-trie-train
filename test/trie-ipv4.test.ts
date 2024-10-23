@@ -1,4 +1,4 @@
-import { IPv4Trie, ipv4AddressToBits, checkOverlaps, PrefixInfo } from '../src/utils/trie-ipv4';
+import { ipv4AddressToBits, checkOverlaps } from '../src/trie-ipv4';
 
 
 describe('IPv4Trie Class detect overlaps', () => {
@@ -20,29 +20,29 @@ describe('IPv4Trie Class detect overlaps', () => {
     it('should detect overlaps and throw errors', () => {
         const ranges = [
             { address: '192.168.0.0', prefixLength: 16 },
-            { address: '192.168.0.0', prefixLength: 16 }, // 同じプレフィックス
-            { address: '192.168.1.0', prefixLength: 24 }, // 既存のプレフィックスに含まれる
-            { address: '192.168.0.0', prefixLength: 15 }, // 既存のプレフィックスを包含する
+            { address: '192.168.0.0', prefixLength: 16 },
+            { address: '192.168.1.0', prefixLength: 24 },
+            { address: '192.168.0.0', prefixLength: 15 },
         ];
 
-        const prefixInfos = checkOverlaps(ranges);
+        const prefixInfos = checkOverlaps(ranges);        
 
         expect(prefixInfos[0].overlap).toBe(false);
         expect(prefixInfos[0].errorMessage).toBeUndefined();
 
         expect(prefixInfos[1].overlap).toBe(true);
-        expect(prefixInfos[1].errorMessage).toBe('重複エラー: 同じプレフィックスが既に存在します。');
+        expect(prefixInfos[1].errorMessage).toStrictEqual({type:'RangeError',message:'The same prefix already exists.'});
 
         expect(prefixInfos[2].overlap).toBe(true);
-        expect(prefixInfos[2].errorMessage).toBe('重複エラー: 指定されたプレフィックスは既存のプレフィックスに含まれています。');
+        expect(prefixInfos[2].errorMessage).toStrictEqual({type:'RangeError',message:'The specified prefix is included in an existing prefix.'});
 
         expect(prefixInfos[3].overlap).toBe(true);
-        expect(prefixInfos[3].errorMessage).toBe('重複エラー: 指定されたプレフィックスは既存のプレフィックスを包含しています。');
+        expect(prefixInfos[3].errorMessage).toStrictEqual({type:'RangeError',message:'The specified prefix contains an existing prefix.'});
     });
 });
 
 
-describe('IPv4 Address Conversion', () => {
+describe('IPv4 Address tp Bits Conversion', () => {
     it('should convert IPv4 address to bits correctly', () => {
         const address = '192.168.0.1';
         const bits = ipv4AddressToBits(address);
