@@ -61,7 +61,7 @@ describe('IPv4 Address tp Bits Conversion', () => {
     });
 });
 
-describe('IPv4 search existing prefixes', () => {
+describe('Search existing prefixes in Trie', () => {
     let trie: Trie;
     beforeEach(() => {
         trie = new Trie();

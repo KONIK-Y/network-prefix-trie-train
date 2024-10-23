@@ -18,6 +18,30 @@ export function ipv4AddressToBits(address: string): number[] {
     return bits;
 }
 
+/**
+ * Checks for overlapping IPv4 address ranges and returns information about each range.
+ *
+ * @param ranges - An array of objects containing IPv4 address ranges with their prefix lengths.
+ * @returns An array of `PrefixInfo` objects containing information about each range, including whether it overlaps with any other range.
+ *
+ * @remarks
+ * This function uses a Trie data structure to efficiently check for overlapping ranges. If an overlap is detected, the `overlap` property of the corresponding `PrefixInfo` object is set to `true`, and an `errorMessage` is provided with details about the error.
+ *
+ * @example
+ * ```typescript
+ * const ranges = [
+ *   { address: '192.168.1.0', prefixLength: 24 },
+ *   { address: '192.168.1.128', prefixLength: 25 },
+ * ];
+ * const result = checkOverlaps(ranges);
+ * console.log(result);
+ * // Output:
+ * // [
+ * //   { address: '192.168.1.0', prefixLength: 24, overlap: false },
+ * //   { address: '192.168.1.128', prefixLength: 25, overlap: true, errorMessage: { type: 'Error', message: 'Overlap detected' } }
+ * // ]
+ * ```
+ */
 export function checkOverlaps(ranges: { address: string; prefixLength: number }[]): PrefixInfo[] {
     const trie = new Trie();
     const prefixInfos: PrefixInfo[] = [];
