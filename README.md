@@ -17,13 +17,6 @@ It provides classes and functions for checking overlapping address ranges using 
 | `checkOverlaps`     | Checks for overlapping IPv4 or IPv6 address ranges and returns information for each range. | `./ipv6-utils.ts`, `./ipv4-utils.ts`  |
 | `ipv4AddressToBits` | Converts an IPv4 address to a bit array.                    | `./ipv4-utils.ts`                     |
 
-## Clone
-```sh
-git clone https://github.com/yourusername/network-prefix-trie.git
-cd network-prefix-trie
-npm install
-```
-
 ## Usage
 This project provides a Trie data structure for storing and checking overlapping network prefixes. The primary classes and functions help manage both IPv4 and IPv6 address ranges, including converting addresses to bit arrays and detecting overlaps.
 
