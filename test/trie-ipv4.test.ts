@@ -1,7 +1,8 @@
-import { ipv4AddressToBits, checkOverlaps, IPv4Trie } from '../src/trie-ipv4';
+import { ipv4AddressToBits, checkOverlaps } from '../src/ipv4-utils';
+import { Trie } from '../src/trie';
 
 
-describe('IPv4Trie Class detect overlaps', () => {
+describe('detect overlaps in IPv4 address ranges', () => {
     it('should insert prefixes without overlaps', () => {
         const ranges = [
             { address: '192.168.0.0', prefixLength: 16 },
@@ -60,10 +61,10 @@ describe('IPv4 Address tp Bits Conversion', () => {
     });
 });
 
-describe('IPv4Trie Class search prefixes', () => {
-    let trie: IPv4Trie;
+describe('IPv4 search existing prefixes', () => {
+    let trie: Trie;
     beforeEach(() => {
-        trie = new IPv4Trie();
+        trie = new Trie();
       });
 
   it('should find an existing prefix', () => {

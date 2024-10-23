@@ -1,5 +1,3 @@
-import { PrefixInfo } from "./types/types";
-
 export class TrieNode {
     children: Map<number, TrieNode>;
     isEnd: boolean;
@@ -10,7 +8,7 @@ export class TrieNode {
     }
 }
 
-export class IPv4Trie {
+export class Trie {
     root: TrieNode;
 
     constructor() {
@@ -54,44 +52,4 @@ export class IPv4Trie {
         }
         return node.isEnd;
     }
-}
-
-
-export function ipv4AddressToBits(address: string): number[] {
-    const bits: number[] = [];
-    const octets = address.split('.').map(Number);
-    for (const octet of octets) {
-        for (let i = 7; i >= 0; i--) {
-            bits.push((octet >> i) & 1);
-        }
-    }
-    return bits;
-}
-
-export function checkOverlaps(ranges: { address: string; prefixLength: number }[]): PrefixInfo[] {
-    const trie = new IPv4Trie();
-    const prefixInfos: PrefixInfo[] = [];
-
-    for (const range of ranges) {
-        const prefixInfo: PrefixInfo = {
-            address: range.address,
-            prefixLength: range.prefixLength,
-            overlap: false,
-        };
-        const bits = ipv4AddressToBits(range.address);
-
-        try {
-            trie.insert(bits, range.prefixLength);
-        } catch (error: any) {
-            prefixInfo.overlap = true;
-            prefixInfo.errorMessage = {
-                type: error.constructor.name,
-                message: error.message,
-            }
-        }
-
-        prefixInfos.push(prefixInfo);
-    }
-
-    return prefixInfos;
 }

@@ -1,7 +1,8 @@
-import { ipv6AddressToBits, checkOverlaps, expandIPv6Address, IPv6Trie } from '../src/trie-ipv6';
+import { ipv6AddressToBits, checkOverlaps, expandIPv6Address } from '../src/ipv6-utils';
+import { Trie } from '../src/trie';
 
 
-describe('IPv6Trie Class detect overlaps', () => {
+describe('detect overlaps in IPv6 address ranges', () => {
     it('should insert prefixes without overlaps', () => {
         const ranges = [
             { address: '2001:db8::', prefixLength: 32 },
@@ -118,11 +119,11 @@ describe('Expand IPv6 Address', () => {
       });  
   });
 
-describe('IPv6Trie Class search prefixes', () => {
-  let trie: IPv6Trie;
+describe('Search existing prefixes in Trie', () => {
+  let trie: Trie;
 
   beforeEach(() => {
-    trie = new IPv6Trie();
+    trie = new Trie();
   });
 
   it('should find an existing prefix', () => {

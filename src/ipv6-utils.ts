@@ -1,63 +1,12 @@
+import { Trie } from "./trie";
 import { PrefixInfo } from "./types/types";
-
-export class TrieNode {
-    children: Map<number, TrieNode>;
-    isEnd: boolean;
-
-    constructor() {
-        this.children = new Map();
-        this.isEnd = false;
-    }
-}
-
-export class IPv6Trie {
-    root: TrieNode;
-
-    constructor() {
-        this.root = new TrieNode();
-    }
-
-    insert(prefixBits: number[], prefixLength: number): void {
-        let node = this.root;
-        for (let i = 0; i < prefixLength; i++) {
-            const bit = prefixBits[i];
-        
-            if (!node.children.has(bit)) {
-                node.children.set(bit, new TrieNode());
-            }
-            node = node.children.get(bit)!;
-        
-            if (node.isEnd) {
-                if (i === prefixLength - 1) {
-                    throw new RangeError(`The same prefix already exists.`);
-                } else {
-                    throw new RangeError(`The specified prefix is included in an existing prefix.`);
-                }
-            }
-        }
-        if (node.children.size > 0) {
-            throw new RangeError(`The specified prefix contains an existing prefix.`);
-        }
-        node.isEnd = true;        
-    }
-    search(prefixBits: number[], prefixLength: number): boolean {
-        let node = this.root;
-        for (let i = 0; i < prefixLength; i++) {
-            const bit = prefixBits[i];        
-            if (!node.children.has(bit)) {
-                return false;
-            }
-            node = node.children.get(bit)!;
-        }
-        return node.isEnd;
-    }
-}
 
 /**
  * Converts an IPv6 address to an array of bits.
- *
- * @param address - The IPv6 address to convert.
- * @returns An array of bits representing the IPv6 address.
+ * If the address is compressed, it will be expanded before conversion.
+ * 
+ * @param address - The IPv6 address to convert. (e.g., "2001:db8::", "2001:db8::1", "2001:db8:0:0:0:0:2:1")
+ * @returns An array of bits representing the IPv6 address.(e.g., [1, 1, 0, 0, 0, 0, 0, 0, ...])
  * @throws SyntaxError - If the expanded IPv6 address is invalid.
  */
 export function ipv6AddressToBits(address: string): number[] {
@@ -107,23 +56,31 @@ export function expandIPv6Address(address: string): string {
 }
 
 /**
- * Checks for overlapping IPv6 address ranges.
+ * Checks for overlapping IPv6 address ranges and returns information about each range.
  *
- * @param ranges - An array of objects containing IPv6 address ranges and their prefix lengths.
- * @returns An array of `PrefixInfo` objects indicating whether each range overlaps with any previously inserted range.
+ * @param ranges - An array of objects containing IPv6 address ranges with their prefix lengths.
+ * @returns An array of `PrefixInfo` objects containing information about each range, including whether it overlaps with any other range.
  *
- * Each object in the `ranges` array should have the following properties:
- * - `address`: The IPv6 address as a string.
- * - `prefixLength`: The prefix length of the IPv6 address.
+ * @remarks
+ * This function uses a Trie data structure to efficiently check for overlapping ranges. If an overlap is detected, the `overlap` property of the corresponding `PrefixInfo` object is set to `true`, and an `errorMessage` is provided with details about the error.
  *
- * Each object in the returned array will have the following properties:
- * - `address`: The IPv6 address as a string.
- * - `prefixLength`: The prefix length of the IPv6 address.
- * - `overlap`: A boolean indicating whether the range overlaps with any previously inserted range.
- * - `errorMessage` (optional): An error message if an overlap is detected.
+ * @example
+ * ```typescript
+ * const ranges = [
+ *  { address: '2001:db8::', prefixLength: 32 },
+ * { address: '2001:db8::1', prefixLength: 128 },
+ * ];
+ * const result = checkOverlaps(ranges);
+ * console.log(result);
+ * // Output:
+ * // [
+ * //   { address: '2001:db8::', prefixLength: 32, overlap: false },
+ * //   { address: '2001:db8::1', prefixLength: 128, overlap: true, errorMessage: { type: 'Error', message: 'Overlap detected' } }
+ * // ]
+ * ```
  */
 export function checkOverlaps(ranges: { address: string; prefixLength: number }[]): PrefixInfo[] {
-    const trie = new IPv6Trie();
+    const trie = new Trie();
     const prefixInfos: PrefixInfo[] = [];
 
     for (const range of ranges) {
